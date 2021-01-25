@@ -1,4 +1,4 @@
-function res = extractresult(len,inp,ts)
+function res = extractresult(xx,len,inp,ts)
 %% Extract result
 res.Pg = reshape(xx(inp.Pg),len.Pg,ts)';
 res.Qg = reshape(xx(inp.Qg),len.Qg,ts)';
