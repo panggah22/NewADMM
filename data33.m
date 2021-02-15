@@ -69,7 +69,8 @@ data.bus = [(1:data.num_bus)', data.bus]; % for internal numbering
 % C
 data.bus(:,3:4) = data.bus(:,3:4)./(data.MVAbase*1000);
 % Load variation in 24hr span
-data.loadcoeff = 0.8*[0.556 0.487 0.452 0.443 0.405 0.462 0.542 0.652 0.712 0.872 0.904 0.906 0.912 0.915 0.915 0.872 0.861 0.855 0.832 0.724 0.667 0.657 0.623 0.584]';
+data.loadcoeff = [0.556 0.487 0.452 0.443 0.405 0.462 0.542 0.652 0.712 0.872 0.904 0.906 0.912 0.915 0.915 0.872 0.861 0.855 0.832 0.724 0.667 0.657 0.623 0.584]';
+data.loadcoeff = data.loadcoeff * (1/max(data.loadcoeff));
 
 %% Branch data
 data.branch = [
@@ -130,16 +131,19 @@ data.branch(:,8) = data.branch(:,8)./(data.MVAbase*1000);
 %% CB data
 data.cb = [
 %   BusID   Q(kVar)
-    6       100
-    18      100
-    33      100
+    11       100
+    23      100
+    28      100
 ];
 
 % A
 data.cb = data.cb(ismember(data.cb(:,1),pk,'rows'),:);
 % B
 data.num_cb = size(data.cb,1);
-cbbus = data.bus(ismember(data.bus(:,2),data.cb(:,1)),1);
+cbbus = zeros(data.num_cb,1);
+for ii = 1:data.num_cb
+    cbbus(ii) = data.bus(data.bus(:,2)==data.cb(ii,1),1);
+end
 data.cb = [(1:data.num_cb)', cbbus ,data.cb];
 % C
 data.cb(:,4) = data.cb(:,4)./(data.MVAbase*1000);
@@ -155,30 +159,37 @@ end
 data.ficgen = data.ficgen(ismember(data.ficgen(:,1),pk,'rows'),:);
 % B
 data.num_ficgen = size(data.ficgen,1);
-ficbus = data.bus(ismember(data.bus(:,2),data.ficgen),1);
+ficbus = zeros(data.num_ficgen,1);
+for ii = 1:data.num_ficgen
+    ficbus(ii) = data.bus(data.bus(:,2)==data.ficgen(ii),1);
+end
 data.ficgen = [(1:data.num_ficgen)', ficbus, data.ficgen];
 
 %% EVCS data
 data.evcs = [
 %  Node  	Capacity   kWmax   Smax     PVkW   EV_num
-    5       500         100      250    100     10
-    14      500         100      250    100     10
-    30      500         100      250    100     10
+    18      1000         200      400    50     10
+    3     1000         200      400    50     10
+    32     1000         200      400    50     10
 ];
-
+Qmax = sqrt(data.evcs(:,4).^2 / 2);
+data.evcs = [data.evcs Qmax];
 % A 
 data.evcs = data.evcs(ismember(data.evcs(:,1),pk,'rows'),:);
 % B 
 data.num_evcs = size(data.evcs,1);
-evcsbus = data.bus(ismember(data.bus(:,2),data.evcs(:,1)),1);
+evcsbus = zeros(data.num_evcs,1);
+for ii = 1:data.num_evcs
+    evcsbus(ii) = data.bus(data.bus(:,2)==data.evcs(ii,1),1);
+end
 data.evcs = [(1:data.num_evcs)', evcsbus, data.evcs];
 % C 
-data.evcs(:,4:7) = data.evcs(:,4:7)./(data.MVAbase*1000);
+data.evcs(:,[4:7, 9]) = data.evcs(:,[4:7, 9])./(data.MVAbase*1000);
 % PV coefficient
-data.PVcoeff = [0 0 0 0 0 0 0.05 0.2 0.35 0.50 0.65 0.75 0.8 0.75 0.65 0.50 0.35 0.2 0.05 0 0 0 0 0];
+data.PVcoeff = 1.25*[0 0 0 0 0 0 0.05 0.2 0.35 0.50 0.65 0.75 0.8 0.75 0.65 0.50 0.35 0.2 0.05 0 0 0 0 0];
 
 % A
-data.num_ev = sum(data.evcs(:,end));
+data.num_ev = sum(data.evcs(:,8));
 %% Driving pattern realization
 %           kWh     Pcmax   kWh/km  Socmin  Socmax
 data.evv = [60      10      0.15    0.2     1];
